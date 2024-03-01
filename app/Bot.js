@@ -1,13 +1,14 @@
 const TelegramBot = require("node-telegram-bot-api")
 const commands = require("../libs/command")
+const apiEndpoints = require("../libs/config")
 const { helpText, invalidCommand } = require("../libs/constant")
 
 class Bot extends TelegramBot {
   constructor(token, options) {
     super(token, options)
     console.log("AditBot started")
-    this.on("polling_error", (error)=>{
-        console.log(error.code)
+    this.on("polling_error", (error) => {
+      console.log(error.code)
     })
     this.on("message", (callback) => {
       const isInCommand = Object.values(commands).some((keywword) =>
@@ -28,12 +29,11 @@ class Bot extends TelegramBot {
         })
       }
     })
-    this.on("callback_query", async(callback)=>{
-        const callbackName = callback.data
-        const botProfile = await this.getMe()
-        if(callbackName == "user_guide"){
-            this.sendMessage(callback.from.id, helpText(botProfile.username))
-        }
+    this.on("callback_query", (callback) => {
+      const callbackName = callback.data
+      if (callbackName == "user_guide") {
+        this.sendMessage(callback.from.id, helpText)
+      }
     })
   }
   getSticker() {
@@ -48,14 +48,21 @@ class Bot extends TelegramBot {
       this.sendMessage(
         callback.from.id,
         "halo dit ~~~ apa yang ingin kamu lakukan?"
-      )
-      if (callback.text !== ".") {
-        this.onText("message", (callback, after) => {
-          this.sendMessage(callback.from.id, `oalah kamu ingin ${after[1]}`)
+      ).then(() => {
+        this.once("message", (callback) => {
+          if (callback.text == "makan") {
+            console.log("once success")
+            return
+          }
+          // this.sendMessage(callback.from.id, `oalah kamu ingin`)
+          // if (callback.text !== ".") {
+          //   this.sendMessage(callback.from.id, `oalah kamu ingin ${after[1]}`)
+          //   return
+          // } else {
+          //   this.sendMessage(callback.from.id, "yawess")
+          // }
         })
-      } else {
-        this.sendMessage(callback.from.id, "yawess")
-      }
+      })
     })
   }
   getTextAfter() {
@@ -67,9 +74,8 @@ class Bot extends TelegramBot {
   getQuotes() {
     this.onText(commands.quote, async (callback) => {
       console.log(`getQuotes executed by ${callback.from.first_name}`)
-      const quoteEndpoint = "https://api.kanye.rest/"
       try {
-        const apiCall = await fetch(quoteEndpoint)
+        const apiCall = await fetch(apiEndpoints.quoteEndpoint)
         const { quote } = await apiCall.json()
 
         this.sendMessage(callback.from.id, quote)
@@ -84,9 +90,8 @@ class Bot extends TelegramBot {
   getNews() {
     this.onText(commands.news, async (callback) => {
       console.log(`getNews executed by ${callback.from.first_name}`)
-      const newsEndpoint = "https://jakpost.vercel.app/api/category/indonesia"
       try {
-        const apiCall = await fetch(newsEndpoint)
+        const apiCall = await fetch(apiEndpoints.newsEndpoint)
         const { posts } = await apiCall.json()
         for (let i = 0; i < 2; i++) {
           const news = posts[i]
@@ -103,10 +108,8 @@ class Bot extends TelegramBot {
   getQuake() {
     this.onText(commands.quake, async (callback) => {
       console.log(`getQuake executed by ${callback.from.first_name}`)
-      const earthQuakeEndPoint =
-        "https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json"
       try {
-        const apiCall = await fetch(earthQuakeEndPoint)
+        const apiCall = await fetch(apiEndpoints.earthQuakeEndPoint)
         const {
           Infogempa: {
             gempa: { Tanggal, Jam, Magnitude, Kedalaman, Wilayah, Shakemap },
@@ -129,8 +132,113 @@ class Bot extends TelegramBot {
   getHelp() {
     this.onText(commands.help, async (callback) => {
       console.log(`getHelp executed by ${callback.from.first_name}`)
-      const botProfile = await this.getMe()
-      this.sendMessage(callback.from.id, helpText(botProfile.username))
+      this.sendMessage(callback.from.id, helpText, {parse_mode:"Markdown"})
+    })
+  }
+  getMenu() {
+    this.onText(commands.menu, (callback) => {
+      console.log(`getMenu called with ${callback.from.first_name}`)
+      const buttonMenu = {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "!help",
+                callback_data: "user_help",
+              },
+              {
+                text: "!quote",
+                callback_data: "user_quote",
+              },
+              {
+                text: "!news",
+                callback_data: "user_news",
+              },
+              {
+                text: "!quake",
+                callback_data: "user_quake",
+              },
+              {
+                text: "!halo",
+                callback_data: "user_halo",
+              },
+            ],
+          ],
+        },
+        parse_mode: "Markdown",
+      }
+      this.sendMessage(callback.from.id, helpText, buttonMenu)
+    })
+    this.on("callback_query", async (callback) => {
+      const callbackName = callback.data
+      switch (callbackName) {
+        case "user_help":
+          console.log("user clicked help")
+          this.sendMessage(callback.from.id, helpText,{parse_mode:"Markdown"})
+          break
+        case "user_quote":
+          console.log("user clicked quote")
+          try {
+            const apiCall = await fetch(apiEndpoints.quoteEndpoint)
+            const { quote } = await apiCall.json()
+    
+            this.sendMessage(callback.from.id, quote)
+          } catch (e) {
+            this.sendMessage(
+              callback.from.id,
+              "we're sorry cannot show these quote 🙏"
+            )
+          }
+          break
+        case "user_news":
+          console.log("user clicked news")
+          try {
+            const apiCall = await fetch(apiEndpoints.newsEndpoint)
+            const { posts } = await apiCall.json()
+            for (let i = 0; i < 2; i++) {
+              const news = posts[i]
+              const { title, image, headline } = news
+              this.sendPhoto(callback.from.id, image, {
+                caption: `Title: ${title}\n\nHeadline: ${headline}`,
+              })
+            }
+          } catch (err) {
+            this.sendMessage(callback.from.id, "Error fetching News 🙏")
+          }
+          break
+        case "user_quake":
+          console.log("user clicked quake")
+          try {
+            const apiCall = await fetch(apiEndpoints.earthQuakeEndPoint)
+            const {
+              Infogempa: {
+                gempa: { Tanggal, Jam, Magnitude, Kedalaman, Wilayah, Shakemap },
+              },
+            } = await apiCall.json()
+    
+            const gempaID = callback.from.id
+            const url = `https://data.bmkg.go.id/DataMKG/TEWS/${Shakemap}`
+    
+            this.sendPhoto(gempaID, url, {
+              caption: `
+              -----------------------\nINFO GEMPA\n-----------------------\n ${Tanggal}||${Jam}\nWilayah: ${Wilayah}\nKedalaman: ${Kedalaman}\nMagnitude: ${Magnitude}
+              `,
+            })
+          } catch (err) {
+            this.sendMessage(callback.from.id, "Error Fetching Earth Quakes 🙏")
+          }
+          break
+        case "user_halo":
+          console.log("user clicked halo")
+          this.sendMessage(
+            callback.from.id,
+            "halo dit ~~~ apa yang ingin kamu lakukan?"
+          )
+          break
+        default:
+          console.log(callbackName)
+          break
+      }
     })
   }
 }

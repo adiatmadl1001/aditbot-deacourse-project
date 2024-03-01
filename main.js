@@ -15,6 +15,7 @@ const main = () => {
   aditBot.getNews()
   aditBot.getQuake()
   aditBot.getHelp()
+  aditBot.getMenu()
   console.log("checking complete")
 }
 

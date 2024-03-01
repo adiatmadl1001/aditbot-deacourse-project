@@ -5,6 +5,7 @@ const commands ={
     follow: /^!follow(.+)/,
     quake: /^!quake$/,
     help: /^!help$/,
+    menu: /^!command$/,
 
 }
 
