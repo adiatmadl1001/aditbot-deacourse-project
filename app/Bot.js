@@ -1,6 +1,5 @@
 const TelegramBot = require("node-telegram-bot-api")
 const commands = require("../libs/command")
-const apiEndpoints = require("../libs/config")
 const { helpText, invalidCommand } = require("../libs/constant")
 
 class Bot extends TelegramBot {
@@ -74,8 +73,9 @@ class Bot extends TelegramBot {
   getQuotes() {
     this.onText(commands.quote, async (callback) => {
       console.log(`getQuotes executed by ${callback.from.first_name}`)
+      const quoteEndpoint = process.env.QUOTE_ENDPOINT
       try {
-        const apiCall = await fetch(apiEndpoints.quoteEndpoint)
+        const apiCall = await fetch(quoteEndpoint)
         const { quote } = await apiCall.json()
 
         this.sendMessage(callback.from.id, quote)
@@ -90,8 +90,9 @@ class Bot extends TelegramBot {
   getNews() {
     this.onText(commands.news, async (callback) => {
       console.log(`getNews executed by ${callback.from.first_name}`)
+      const newsEndpoint = process.env.NEWS_ENDPOINT
       try {
-        const apiCall = await fetch(apiEndpoints.newsEndpoint)
+        const apiCall = await fetch(newsEndpoint)
         const { posts } = await apiCall.json()
         for (let i = 0; i < 2; i++) {
           const news = posts[i]
@@ -108,8 +109,9 @@ class Bot extends TelegramBot {
   getQuake() {
     this.onText(commands.quake, async (callback) => {
       console.log(`getQuake executed by ${callback.from.first_name}`)
+      const earthQuakeEndPoint = process.env.QUAKE_ENDPOINT
       try {
-        const apiCall = await fetch(apiEndpoints.earthQuakeEndPoint)
+        const apiCall = await fetch(earthQuakeEndPoint)
         const {
           Infogempa: {
             gempa: { Tanggal, Jam, Magnitude, Kedalaman, Wilayah, Shakemap },
