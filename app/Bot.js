@@ -180,8 +180,9 @@ class Bot extends TelegramBot {
           break
         case "user_quote":
           console.log("user clicked quote")
+          const quoteEndpoint = process.env.QUOTE_ENDPOINT
           try {
-            const apiCall = await fetch(apiEndpoints.quoteEndpoint)
+            const apiCall = await fetch(quoteEndpoint)
             const { quote } = await apiCall.json()
     
             this.sendMessage(callback.from.id, quote)
@@ -194,8 +195,9 @@ class Bot extends TelegramBot {
           break
         case "user_news":
           console.log("user clicked news")
+          const newsEndpoint = process.env.NEWS_ENDPOINT
           try {
-            const apiCall = await fetch(apiEndpoints.newsEndpoint)
+            const apiCall = await fetch(newsEndpoint)
             const { posts } = await apiCall.json()
             for (let i = 0; i < 2; i++) {
               const news = posts[i]
@@ -210,8 +212,9 @@ class Bot extends TelegramBot {
           break
         case "user_quake":
           console.log("user clicked quake")
+          const earthQuakeEndPoint = process.env.QUAKE_ENDPOINT
           try {
-            const apiCall = await fetch(apiEndpoints.earthQuakeEndPoint)
+            const apiCall = await fetch(earthQuakeEndPoint)
             const {
               Infogempa: {
                 gempa: { Tanggal, Jam, Magnitude, Kedalaman, Wilayah, Shakemap },
@@ -220,10 +223,10 @@ class Bot extends TelegramBot {
     
             const gempaID = callback.from.id
             const url = `https://data.bmkg.go.id/DataMKG/TEWS/${Shakemap}`
-    
+            
             this.sendPhoto(gempaID, url, {
               caption: `
-              -----------------------\nINFO GEMPA\n-----------------------\n ${Tanggal}||${Jam}\nWilayah: ${Wilayah}\nKedalaman: ${Kedalaman}\nMagnitude: ${Magnitude}
+              -----------------------\nINFO GEMPA\n-----------------------\n ${Tanggal}||${Jam}\nWilayah: ${Wilayah}\nKedalaman: ${Kedalaman}\nMagnitude: ${Magnitude}\n\nSumber: Badan Meteorologi, Klimatologi, dan Geofisika(BMKG)
               `,
             })
           } catch (err) {
