@@ -6,7 +6,8 @@ const commands ={
     quake: /^!quake$/,
     help: /^!help$/,
     menu: /^!command$/,
-
+    greet: /^!greet$/,
+    province: /^!wilayah$/,
 }
 
 module.exports = commands

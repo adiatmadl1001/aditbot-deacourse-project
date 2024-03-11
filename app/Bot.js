@@ -1,6 +1,7 @@
 const TelegramBot = require("node-telegram-bot-api")
 const commands = require("../libs/command")
 const { helpText, invalidCommand } = require("../libs/constant")
+const { checkTime } = require("../libs/utils")
 
 class Bot extends TelegramBot {
   constructor(token, options) {
@@ -33,6 +34,15 @@ class Bot extends TelegramBot {
       if (callbackName == "user_guide") {
         this.sendMessage(callback.from.id, helpText)
       }
+    })
+  }
+  getGreeting() {
+    this.onText(commands.greet, (callback)=>{
+      console.log(`getGreeting excuted by ${callback.from.first_name}`,checkTime())
+      
+      const id = callback.from.id
+      const greeting = `Hai i know that you ${callback.from.first_name}!`
+      this.sendMessage(id, greeting)
     })
   }
   getSticker() {
@@ -243,6 +253,24 @@ class Bot extends TelegramBot {
         default:
           console.log(callbackName)
           break
+      }
+    })
+  }
+  getProvinces() {
+    this.onText(commands.province, async(callback) => {
+      console.log(`getProvinces excecuted by  ${callback.from.first_name}`)
+      const id = callback.from.id
+      const provinceEndpoint = process.env.PROVINSI_ENDPOINT
+      try{
+        const apiCall = await fetch(provinceEndpoint)
+        const {value} = await apiCall.json()
+        const province = value.map((prov) => prov.name)
+        const verticalList = province.join("\n")
+
+        this.sendMessage(id, `List of ${value.length} Provinces in Indonesia:\n${verticalList}`)
+      }
+      catch(err) {
+        this.sendMessage(id, "Fetching province endpoint failed")
       }
     })
   }

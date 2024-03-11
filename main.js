@@ -16,6 +16,8 @@ const main = () => {
   aditBot.getQuake()
   aditBot.getHelp()
   aditBot.getMenu()
+  aditBot.getGreeting()
+  aditBot.getProvinces()
   console.log("checking complete")
 }
 
