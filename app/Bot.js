@@ -1,40 +1,15 @@
 const TelegramBot = require("node-telegram-bot-api")
 const commands = require("../libs/command")
-const { helpText, invalidCommand } = require("../libs/constant")
-const { checkTime } = require("../libs/utils")
+const { helpText } = require("../libs/constant")
+const { checkTime, checkError, checkCommand, checkCallback,commandQuote, commandSticker, commandFollow } = require("../libs/utils")
 
 class Bot extends TelegramBot {
   constructor(token, options) {
     super(token, options)
     console.log("AditBot started")
-    this.on("polling_error", (error) => {
-      console.log(error.code)
-    })
-    this.on("message", (callback) => {
-      const isInCommand = Object.values(commands).some((keywword) =>
-        keywword.test(callback.text)
-      )
-      if (!isInCommand) {
-        this.sendMessage(callback.from.id, invalidCommand, {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "User Guide",
-                  callback_data: "user_guide",
-                },
-              ],
-            ],
-          },
-        })
-      }
-    })
-    this.on("callback_query", (callback) => {
-      const callbackName = callback.data
-      if (callbackName == "user_guide") {
-        this.sendMessage(callback.from.id, helpText)
-      }
-    })
+    checkError(this)
+    checkCommand(this)
+    checkCallback(this)
   }
   getGreeting() {
     this.onText(commands.greet, (callback)=>{
@@ -46,56 +21,13 @@ class Bot extends TelegramBot {
     })
   }
   getSticker() {
-    this.on("sticker", (callback) => {
-      console.log(`getSticker executed by ${callback.from.first_name}`)
-      this.sendMessage(callback.from.id, callback.sticker.emoji)
-    })
-  }
-  getAdit() {
-    this.onText(commands.halo, (callback) => {
-      console.log(`getAdit executed by ${callback.from.first_name}`)
-      this.sendMessage(
-        callback.from.id,
-        "halo dit ~~~ apa yang ingin kamu lakukan?"
-      ).then(() => {
-        this.once("message", (callback) => {
-          if (callback.text == "makan") {
-            console.log("once success")
-            return
-          }
-          // this.sendMessage(callback.from.id, `oalah kamu ingin`)
-          // if (callback.text !== ".") {
-          //   this.sendMessage(callback.from.id, `oalah kamu ingin ${after[1]}`)
-          //   return
-          // } else {
-          //   this.sendMessage(callback.from.id, "yawess")
-          // }
-        })
-      })
-    })
+    commandSticker(this)
   }
   getTextAfter() {
-    this.onText(commands.follow, (callback, after) => {
-      console.log(`getSticker executed by ${callback.from.first_name}`)
-      this.sendMessage(callback.from.id, `this thing is${after[1]}`)
-    })
+    commandFollow(this)
   }
   getQuotes() {
-    this.onText(commands.quote, async (callback) => {
-      console.log(`getQuotes executed by ${callback.from.first_name}`)
-      const quoteEndpoint = process.env.QUOTE_ENDPOINT
-      try {
-        const apiCall = await fetch(quoteEndpoint)
-        const { quote } = await apiCall.json()
-
-        this.sendMessage(callback.from.id, quote)
-      } catch (e) {
-        this.sendMessage(
-          callback.from.id,
-          "we're sorry cannot show these quote 🙏"
-        )
-      }
-    })
+    commandQuote(this)
   }
   getNews() {
     this.onText(commands.news, async (callback) => {
@@ -272,6 +204,29 @@ class Bot extends TelegramBot {
       catch(err) {
         this.sendMessage(id, "Fetching province endpoint failed")
       }
+    })
+  }
+  getAdit() {
+    this.onText(commands.halo, (callback) => {
+      console.log(`getAdit executed by ${callback.from.first_name}`)
+      this.sendMessage(
+        callback.from.id,
+        "halo dit ~~~ apa yang ingin kamu lakukan?"
+      ).then(() => {
+        this.once("message", (callback) => {
+          if (callback.text == "makan") {
+            console.log("once success")
+            return
+          }
+          // this.sendMessage(callback.from.id, `oalah kamu ingin`)
+          // if (callback.text !== ".") {
+          //   this.sendMessage(callback.from.id, `oalah kamu ingin ${after[1]}`)
+          //   return
+          // } else {
+          //   this.sendMessage(callback.from.id, "yawess")
+          // }
+        })
+      })
     })
   }
 }
